@@ -4,6 +4,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Queue;
@@ -13,12 +14,13 @@ public class Display extends JComponent implements KeyListener, MouseListener, M
 {
 
   private static Map<String, Image> images = new HashMap<String, Image>();
-  
+
   public static Image getImage(String name)
   {
     try
     {
       Image image = images.get(name);
+
       if (image == null)
       {
         URL url = Display.class.getResource(name);
@@ -41,30 +43,33 @@ public class Display extends JComponent implements KeyListener, MouseListener, M
   private int mouseY;
   private World world;
   private Queue<KeyEvent> keys;
-  
+
   public Display(final int width, final int height)
   {
+
+
+
     keys = new ConcurrentLinkedQueue<KeyEvent>();
     mouseX = -1;
     mouseY = -1;
-    
+
     try
     {
       SwingUtilities.invokeAndWait(new Runnable() { public void run() {
-        world = new World(width, height);
-        
+        world = new World(Math.max((int)((((int)(height/8) * 8)*(3.0/8)))+1, width), (int)(height/8) * 8);
+
         frame = new JFrame();
         frame.setTitle("World");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setResizable(false);
-        setPreferredSize(new Dimension(width, height));
+        setPreferredSize(new Dimension(world.getWidth(), world.getHeight()));
         setFocusable(true);
         requestFocusInWindow();
         addKeyListener(Display.this);
         addMouseListener(Display.this);
         addMouseMotionListener(Display.this);
         frame.getContentPane().add(Display.this);
-        
+
         frame.pack();
         frame.setVisible(true);
       }});
@@ -74,7 +79,7 @@ public class Display extends JComponent implements KeyListener, MouseListener, M
       throw new RuntimeException(e);
     }
   }
-  
+
   public void paintComponent(Graphics g)
   {
     try
@@ -87,13 +92,16 @@ public class Display extends JComponent implements KeyListener, MouseListener, M
       setVisible(false);  //stop drawing so we don't keep getting the same error
     }
   }
-  
+
   public void run()
   {
     while (true)
     {
       frame.setTitle(world.getTitle());
       world.stepAll();
+      repaint();
+      try { Thread.sleep(10); } catch(Exception e) { }
+
       while (!keys.isEmpty())
       {
         KeyEvent event = keys.poll();
@@ -114,40 +122,40 @@ public class Display extends JComponent implements KeyListener, MouseListener, M
       world.mouseMoved(mouseMoveX,mouseMoveY);
     }
   }
-  
+
   public void keyPressed(KeyEvent e)
   {
     keys.add(e);
   }
-  
+
   public void keyReleased(KeyEvent e)
   {
     keys.add(e);
   }
-  
+
   public void keyTyped(KeyEvent e)
   {
     //ignored
   }
-  
+
   public void mousePressed(MouseEvent e)
   {
     mouseX = e.getX();
     mouseY = e.getY();
   }
-  
+
   public void mouseReleased(MouseEvent e)
   {
   }
-  
+
   public void mouseClicked(MouseEvent e)
   {
   }
-  
+
   public void mouseEntered(MouseEvent e)
   {
   }
-  
+
   public void mouseExited(MouseEvent e)
   {
   }
@@ -159,7 +167,7 @@ public class Display extends JComponent implements KeyListener, MouseListener, M
 
   public double getMouseX(){
     return mouseMoveX;
-}
+  }
   public double getMouseY(){
     return mouseMoveY;
   }
@@ -171,4 +179,5 @@ public class Display extends JComponent implements KeyListener, MouseListener, M
 
 
   }
+
 }
